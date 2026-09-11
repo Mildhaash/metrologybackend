@@ -146,23 +146,3 @@ The rule engine validates against 14 rules from the Legal Metrology Act, 2009:
 | Needs Review | Font size, Country of origin |
 
 Products with **90%+ pass rate** (13/14 rules) are marked as **compliant**.
-
-## Deployment
-
-### Railway (Recommended)
-
-1. Push this folder to a GitHub repository
-2. Create a new project in [Railway](https://railway.app)
-3. Connect the GitHub repository
-4. Set environment variables in Railway dashboard
-5. Add a persistent volume mount at `/app/uploads`
-6. Deploy
-
-Railway auto-detects Python and uses the `Procfile`:
-```
-web: uvicorn main:app --host 0.0.0.0 --port $PORT
-```
-
-## License
-
-Private — Internal use only.
