@@ -1,0 +1,24 @@
+{
+  "letter_height": {
+    "description": "Minimum height of letters in declarations (Rule 7(3))",
+    "normal_min_mm": 1.0,
+    "embossed_min_mm": 2.0
+  },
+  "weight_volume": {
+    "description": "Table I - Minimum height for weight/volume declarations",
+    "rules": [
+      { "declared_quantity": "Up to 200g/ml", "min_normal_mm": 1.0, "min_embossed_mm": 2.0 },
+      { "declared_quantity": "200-500g/ml", "min_normal_mm": 2.0, "min_embossed_mm": 4.0 },
+      { "declared_quantity": "Above 500g/ml", "min_normal_mm": 4.0, "min_embossed_mm": 6.0 }
+    ]
+  },
+  "length_area_number": {
+    "description": "Table II - Minimum height for length/area/number declarations",
+    "rules": [
+      { "panel_area_cm2_max": 100, "min_normal_mm": 1.0, "min_embossed_mm": 2.0 },
+      { "panel_area_cm2_max": 500, "min_normal_mm": 2.0, "min_embossed_mm": 4.0 },
+      { "panel_area_cm2_max": 2500, "min_normal_mm": 4.0, "min_embossed_mm": 6.0 },
+      { "panel_area_cm2_max": 999999, "min_normal_mm": 6.0, "min_embossed_mm": 6.0 }
+    ]
+  }
+}

@@ -1,0 +1,216 @@
+[
+  {
+    "rule_id": "LM-PC-2011-R6-1a",
+    "section": "Rule 6(1)(a)",
+    "field": "manufacturer_name",
+    "description": "Name and address of manufacturer/packer/importer must be declared",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "presence",
+      "min_length": 5
+    },
+    "error_message": "Missing manufacturer/packer/importer name and address",
+    "suggestion": "Include complete name and postal address of manufacturer, packer, or importer"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-1b",
+    "section": "Rule 6(1)(b)",
+    "field": "commodity_name",
+    "description": "Common or generic name of commodity must be declared",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "presence",
+      "min_length": 3
+    },
+    "error_message": "Missing commodity name declaration",
+    "suggestion": "Declare the common or generic name of the product"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-1c",
+    "section": "Rule 6(1)(c)",
+    "field": "net_quantity",
+    "description": "Net quantity in standard units must be declared",
+    "mandatory": true,
+    "severity": "critical",
+    "validation": {
+      "type": "regex",
+      "pattern": "(\\d+(?:\\.\\d+)?)\\s*(kg|g|gm|grams?|ml|litre|litres?|l|pcs?|pieces?|nos?)"
+    },
+    "error_message": "Missing or invalid net quantity declaration",
+    "suggestion": "Declare net quantity in standard SI units (kg, g, ml, L, etc.)"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-1d",
+    "section": "Rule 6(1)(d)",
+    "field": "manufacture_date",
+    "description": "Month and year of manufacture must be declared",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "regex",
+      "pattern": "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\\s.]+\\d{4}|\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{4}|\\d{1,2}[/\\-]\\d{4}"
+    },
+    "error_message": "Missing or invalid manufacture date",
+    "suggestion": "Declare month and year in format: 'Month YYYY' or 'MM/YYYY'"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-1e",
+    "section": "Rule 6(1)(e)",
+    "field": "mrp",
+    "description": "Retail sale price must be declared with Rs./₹ symbol in prescribed format",
+    "mandatory": true,
+    "severity": "critical",
+    "validation": {
+      "type": "regex",
+      "pattern": "(?:(?:M\\.?\\s*R\\.?\\s*P\\.?|Maximum\\s+Retail\\s+Price|Max\\.?\\s*Retail\\s+Price)\\s*[:.\\s]*(?:R[s5]s?\\.?|Re\\.?|INR|₹|Rupees?)?\\s*[:.\\s]*\\d+(?:\\.\\d{1,2})?\\s*(?:/\\s*-)?\\s*(?:\\(?incl\\.?(?:usive)?\\s+of\\s+all\\s*taxes\\)?)?|(?:R[s5]s?\\.?|Re\\.?|INR|₹|Rupees?)\\s*[:.\\s]*\\d+(?:\\.\\d{1,2})?\\s*(?:/\\s*-)?\\s*(?:\\(?incl\\.?(?:usive)?\\s+of\\s+all\\s*taxes\\)?)?)",
+      "currency_pattern": "(?:R[s5]s?\\.?|Re\\.?|INR|₹|Rupees?)",
+      "currency_error": "MRP must include Rs./₹ symbol (Rs, Rs., Re., INR, ₹ or Rupees)"
+    },
+    "error_message": "MRP format non-compliant with Legal Metrology Rules",
+    "suggestion": "Use format: 'MRP Rs.XX.XX' or 'MRP ₹XX.XX (inclusive of all taxes)'"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-2",
+    "section": "Rule 6(2)",
+    "field": "consumer_care",
+    "description": "Consumer care details must be declared",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "composite",
+      "requires": [
+        "consumer_care_phone",
+        "consumer_care_email"
+      ],
+      "at_least_one": true
+    },
+    "error_message": "Missing consumer care contact details",
+    "suggestion": "Include name, address, telephone number, and email for consumer complaints"
+  },
+  {
+    "rule_id": "LM-PC-2011-R7-LetterHeight",
+    "section": "Rule 7(3)",
+    "field": "letter_height_mm",
+    "description": "Letter height must not be less than 1mm (2mm if embossed)",
+    "mandatory": true,
+    "severity": "needs_review",
+    "validation": {
+      "type": "font_size",
+      "normal_min": 1.0,
+      "embossed_min": 2.0
+    },
+    "error_message": "Letter height below minimum requirement",
+    "suggestion": "Ensure all letters are at least 1mm height (2mm if embossed)"
+  },
+  {
+    "rule_id": "LM-PC-2011-R9-4",
+    "section": "Rule 9(4)",
+    "field": "language",
+    "description": "Declarations must be in Hindi (Devanagari) or English",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "language",
+      "allowed": [
+        "hindi",
+        "english"
+      ]
+    },
+    "error_message": "Declarations not in Hindi or English",
+    "suggestion": "Use Hindi (Devanagari script) or English for all declarations"
+  },
+  {
+    "rule_id": "LM-PC-2011-R12-6",
+    "section": "Rule 12(6)",
+    "field": "quantity_exaggeration",
+    "description": "No words exaggerating or misleading quantity allowed",
+    "mandatory": true,
+    "severity": "minor",
+    "validation": {
+      "type": "not_contain",
+      "words": [
+        "minimum",
+        "not less than",
+        "average",
+        "about",
+        "approximately",
+        "approx"
+      ]
+    },
+    "error_message": "Misleading quantity words detected",
+    "suggestion": "Remove words like 'minimum', 'about', 'approximately' from quantity declaration"
+  },
+  {
+    "rule_id": "LM-PC-2011-R5",
+    "section": "Rule 5",
+    "field": "batch_number",
+    "description": "Batch, lot, or serial number must be declared",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "presence"
+    },
+    "error_message": "Missing batch, lot, or serial number declaration",
+    "suggestion": "Declare the batch, lot, or serial number on the package"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-1f",
+    "section": "Rule 6(1)(f)",
+    "field": "manufacturer_address",
+    "description": "Complete postal address of manufacturer/packer/importer must be declared",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "presence"
+    },
+    "error_message": "Missing manufacturer/packer/importer postal address",
+    "suggestion": "Include the complete postal address with PIN code"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-1g",
+    "section": "Rule 6(1)(g)",
+    "field": "country_of_origin",
+    "description": "Country of origin must be declared for imported goods",
+    "mandatory": true,
+    "severity": "needs_review",
+    "validation": {
+      "type": "presence"
+    },
+    "error_message": "Missing country of origin declaration",
+    "suggestion": "Declare the country of origin for imported products"
+  },
+  {
+    "rule_id": "LM-PC-2011-R8",
+    "section": "Rule 8",
+    "field": "importer_details",
+    "description": "Name and address of importer must be declared for imported goods",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "composite",
+      "requires": [
+        "manufacturer_name",
+        "manufacturer_address"
+      ],
+      "at_least_one": false
+    },
+    "error_message": "Missing importer name and address for imported goods",
+    "suggestion": "Declare the name and complete address of the importer"
+  },
+  {
+    "rule_id": "LM-PC-2011-R6-1h",
+    "section": "Rule 6(1)(h)",
+    "field": "best_before",
+    "description": "Best before/use by date must be declared where applicable",
+    "mandatory": true,
+    "severity": "major",
+    "validation": {
+      "type": "regex",
+      "pattern": "(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{4}|(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*\\d{1,2}[/\\-]\\d{4}|(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\\s.]+\\d{4}|\\d{1,2}\\s*(?:months?|days?)\\s*(?:from|after)\\s*(?:date\\s*of\\s*)?(?:manufacture|packing)"
+    },
+    "error_message": "Missing or invalid best before/use by date declaration",
+    "suggestion": "Declare best before or use by date in a clear format"
+  }
+]
