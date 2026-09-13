@@ -75,7 +75,10 @@ def _run_realtime_pipeline(image_base64: str):
             logger.warning(f"Gemini scan failed: {e} — falling back to RapidOCR")
 
     if gemini_result:
-        extracted_fields = field_extractor.extract_all(gemini_result.ocr_text)
+        # Gemini fields as primary, regex fills gaps
+        gemini_fields = {f.name: f.value for f in gemini_result.fields if f.value}
+        regex_fields = field_extractor.extract_all(gemini_result.ocr_text)
+        extracted_fields = {key: gemini_fields.get(key) or regex_fields.get(key) for key in regex_fields}
         field_bboxes = {}
         for f in gemini_result.fields:
             field_bboxes[f.name] = {
@@ -169,7 +172,10 @@ def upload_scan(
 
     preprocessed_path = preprocessor.preprocess(file_path)
     ocr_result = ocr_service.extract_text(preprocessed_path)
-    extracted_fields = field_extractor.extract_all(ocr_result["full_text"])
+    # Gemini fields as primary, regex fills gaps
+    gemini_fields = {f["name"]: f["value"] for f in ocr_result.get("gemini_fields", []) if f.get("value")}
+    regex_fields = field_extractor.extract_all(ocr_result["full_text"])
+    extracted_fields = {key: gemini_fields.get(key) or regex_fields.get(key) for key in regex_fields}
 
     # Map each extracted value back to its location on the label so the
     # frontend can draw pass/fail overlay boxes (0-1000 normalized coords).
