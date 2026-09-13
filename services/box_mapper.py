@@ -105,14 +105,27 @@ def map_field_boxes(
         return _union(hits) if hits else None
 
     def find_union(*values: Optional[str]) -> Optional[dict]:
+        """Union multiple field boxes, but prefer the largest single match
+        if the boxes are too far apart (avoids stretching across the label)."""
         boxes = [b for b in (find(v) for v in values) if b]
         if not boxes:
             return None
-        # Re-union without double padding
-        x0 = min(b["x"] for b in boxes)
-        y0 = min(b["y"] for b in boxes)
-        x1 = max(b["x"] + b["width"] for b in boxes)
-        y1 = max(b["y"] + b["height"] for b in boxes)
+        if len(boxes) == 1:
+            return boxes[0]
+        # Check if boxes are close together (overlap or within 15% of each other)
+        x0_all = min(b["x"] for b in boxes)
+        x1_all = max(b["x"] + b["width"] for b in boxes)
+        total_span = x1_all - x0_all
+        max_box_width = max(b["width"] for b in boxes)
+        # If the union span is more than 2.5x the largest box, they're too far apart
+        # Just use the largest box (most relevant match)
+        if total_span > max_box_width * 2.5:
+            return max(boxes, key=lambda b: b["width"] * b["height"])
+        # Otherwise, union them
+        x0 = max(0, min(b["x"] for b in boxes) - PAD)
+        y0 = max(0, min(b["y"] for b in boxes) - PAD)
+        x1 = min(1000, max(b["x"] + b["width"] for b in boxes) + PAD)
+        y1 = min(1000, max(b["y"] + b["height"] for b in boxes) + PAD)
         return {"x": x0, "y": y0, "width": x1 - x0, "height": y1 - y0}
 
     f = extracted_fields or {}

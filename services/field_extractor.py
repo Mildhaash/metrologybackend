@@ -23,22 +23,22 @@ class FieldExtractor:
 
     def _extract_mrp(self, text: str) -> Optional[str]:
         normalized = re.sub(r'\s*\n\s*', ' ', text)
-        # Currency marker: Rs text ("Rs", "Rs.", "Re.", "INR", "Rupees")
-        # as well as the ₹ symbol (U+20B9). "R[s5]" tolerates common OCR
-        # misreads of "Rs" as "R5".
         currency = r"(?:R[s5]s?\.?|Re\.?|INR|\u20b9|Rupees?)"
         mrp_kw = r"(?:M\.?\s*R\.?\s*P\.?|Maximum\s+Retail\s+Price|Max\.?\s*Retail\s+Price)"
         taxes = r"(?:\(?incl\.?(?:usive)?\s+of\s+all\s*taxes?\)?)"
         patterns = [
-            rf"{mrp_kw}\s*(?:{taxes})?\s*[:.\s]*{currency}?\s*[:.\s]*(\d+(?:\.\d{{1,2}})?)\s*(?:/\s*-)?\s*(?:{taxes})?",
+            rf"{mrp_kw}\s*[:.\s]*(?:{taxes}\s*[:.\s]*)?{currency}?\s*[:.\s]*(\d+(?:\.\d{{1,2}})?)\s*(?:/\s*-)?\s*(?:{taxes})?",
+            rf"{mrp_kw}\s*[:.\s]*(\d+(?:\.\d{{1,2}})?)\s*(?:/\s*-)?\s*(?:{taxes})?",
             rf"{currency}\s*[:.\s]*(\d+(?:\.\d{{1,2}})?)\s*(?:/\s*-)?\s*(?:{taxes})?",
             rf"(\d+(?:\.\d{{1,2}})?)\s*(?:/\s*-)?\s*(?:{taxes})?\s*[:.\s]*{mrp_kw}",
-            rf"{mrp_kw}\s*[:\s]*(\d+(?:\.\d{{1,2}})?)",
         ]
         for pattern in patterns:
             match = re.search(pattern, normalized, re.IGNORECASE)
             if match:
-                return match.group(0)
+                # Return the matched number with currency context
+                matched_text = match.group(0)
+                # Ensure it includes the currency symbol for rule validation
+                return matched_text
         return None
 
     def _extract_net_quantity(self, text: str) -> Optional[str]:
@@ -72,14 +72,21 @@ class FieldExtractor:
         return None
 
     def _extract_manufacturer(self, text: str) -> Optional[str]:
+        normalized = re.sub(r'\s*\n\s*', ' ', text)
         patterns = [
-            r"(?:Manufactured?\s*(?:&|and)\s*Packed|Manufactured?|Packed?|Marketed?|Produced?)\s*(?:by|at|in)[:\s]+(.+?)(?:\n|$)",
-            r"(?:Mfg|Pkd|Marketed)\s*(?:by)?[:\s]+(.+?)(?:\n|$)",
+            r"Mfd\.?\s*by\s*[:\s]+([A-Za-z][A-Za-z\s&,\.]+?)(?:\s*\n|\s*B\d|\s*Lic|\s*\d{5,}|\s*A-|\s*$)",
+            r"Mktd\.?\s*by\s*[:\s]+([A-Za-z][A-Za-z\s&,\.]+?)(?:\s*\n|\s*A-|\s*$)",
+            r"Manufactured?\s*By\s*:\s*([A-Za-z][A-Za-z\s&,\.]+?)(?:\s*\n|\s*B\d|\s*Lic|\s*$)",
+            r"(?:Manufactured?\s*(?:&|and)?\s*(?:Packed)?\s*by|Marketed?\s*by|Packed?\s*by|Produced?\s*by)\s*[:\s]+([A-Za-z][A-Za-z\s&,\.]+?)(?:\s*\n|\s*$)",
+            r"(?:Mfg|Pkd|Marketed)\s*(?:by)?[:\s]+([A-Za-z][A-Za-z\s&,\.]+?)(?:\s*\n|\s*$)",
         ]
         for pattern in patterns:
-            match = re.search(pattern, text, re.IGNORECASE)
+            match = re.search(pattern, normalized, re.IGNORECASE)
             if match:
-                return match.group(1).strip()
+                result = match.group(1).strip()
+                result = re.sub(r'[,\s]+$', '', result)
+                if len(result) >= 3:
+                    return result
         return None
 
     def _extract_email(self, text: str) -> Optional[str]:
@@ -124,11 +131,12 @@ class FieldExtractor:
         patterns = [
             r"(?:Best\s+Before|Use\s+by|Use\s+By|Expiry|EXP|Exp\.?)\s*[:\s]+(\d+)\s*(months?|days?|years?)",
             r"(?:Best\s+Before|Use\s+by|Use\s+By|Expiry|EXP|Exp\.?)\s*[:\s]+(\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4})",
-            r"(?:Best\s+Before|Use\s+by|Use\s+By|Expiry|EXP|Exp\.?)\s*[:\s]+(\d{1,2}[/\-\.]\d{4})",
+            r"(?:Best\s+Before|Use\s+by|Use\s+By|Expiry|EXP|Exp\.?)\s*[:\s]+(\d{1,2}[/\-\.]\d{2,4})",
         ]
         for pattern in patterns:
             match = re.search(pattern, normalized, re.IGNORECASE)
             if match:
+                # Return full match including keyword (e.g., "USE BY: 28/01/26")
                 return match.group(0)
         for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE)
@@ -148,15 +156,60 @@ class FieldExtractor:
         return None
 
     def _extract_address(self, text: str) -> Optional[str]:
-        pattern = r"([A-Za-z0-9,.\-\s]{10,}?\b\d{6}\b)"
-        match = re.search(pattern, text)
-        return match.group(0).strip() if match else None
+        normalized = re.sub(r'\s*\n\s*', ' ', text)
+        patterns = [
+            # Priority: Mktd. by address with explicit INDIA ending
+            r"Mktd\.?\s*by\s*:\s*[A-Za-z][A-Za-z\s&,\.]+?,\s*([A-Za-z0-9,.\-\s()]+?\d{3}\s?\d{3}\s*\(INDIA\))",
+            # Mktd. by address (shorter, until newline or keyword)
+            r"Mktd\.?\s*by\s*:\s*[A-Za-z][A-Za-z\s&,\.]+?,\s*([A-Za-z0-9,.\-\s()]+?\d{3}\s?\d{3})",
+            # Address with 6-digit PIN code (stop at known keywords)
+            r"([A-Za-z0-9,.\-\s]{10,}?\b\d{3}\s?\d{3}\b)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, normalized, re.IGNORECASE)
+            if match:
+                result = match.group(0).strip()
+                if 'nutritional' not in result.lower() and 'energy' not in result.lower():
+                    return result
+        return None
 
     def _extract_origin(self, text: str) -> Optional[str]:
-        pattern = r"Country\s+of\s+Origin[:\s]+([A-Za-z\s]+?)(?:\n|$)"
-        match = re.search(pattern, text, re.IGNORECASE)
-        return match.group(1).strip() if match else None
+        patterns = [
+            r"Country\s+of\s+Origin[:\s]+([A-Za-z\s]+?)(?:\n|$)",
+            r"PRODUCT\s+OF\s+([A-Za-z\s]+?)(?:\n|$)",
+            r"Made\s+in[:\s]+([A-Za-z\s]+?)(?:\n|$)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        return None
 
     def _extract_commodity_name(self, text: str) -> Optional[str]:
+        normalized = re.sub(r'\s*\n\s*', ' ', text)
         lines = [l.strip() for l in text.split("\n") if l.strip()]
-        return lines[0] if lines else None
+        
+        patterns = [
+            r"(?:Product|Commodity|Item)\s*(?:Name)?\s*[:\s]+([A-Za-z][A-Za-z\s]+?)(?:\s*\n|\s*$)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, normalized, re.IGNORECASE)
+            if match:
+                result = match.group(1).strip()
+                if len(result) >= 3:
+                    return result
+        
+        # Skip non-product lines
+        skip_words = ['nutritional', 'ingredients', 'manufactured', 'mfd', 'marketed', 
+                      'fssai', 'lic', 'keep', 'city', 'clean', 'india', 'of india',
+                      'product of', 'vegetarian', 'usp', 'unit sale', 'best before',
+                      'use by', 'batch', 'mfg', 'date', 'keep your', 'other',
+                      'max.', 'retail', 'price', 'net quantity', 'inclusive', 'taxes',
+                      'bikano', 'bikanervala', 'feedback', 'complaints']
+        for line in lines:
+            lower = line.lower().strip()
+            if len(line) >= 5 and not any(w in lower for w in skip_words):
+                # Skip lines that are mostly numbers or codes
+                if not re.match(r'^[\d\s\-\.\/:]+$', line):
+                    return line
+        return None

@@ -21,6 +21,7 @@ from services.rule_engine import RuleEngine
 from services.box_mapper import map_field_boxes
 from services.font_analyzer import font_analyzer, get_image_dimensions
 from services.geocoding import get_short_address
+from services.cloudinary_service import upload_image, upload_base64, is_configured as cloudinary_configured
 
 logger = logging.getLogger(__name__)
 
@@ -193,9 +194,12 @@ def upload_scan(
 
     validation_result = rule_engine.validate(extracted_fields, font_analysis_result)
 
+    # Upload to Cloudinary (falls back to local path if not configured)
+    image_url = upload_image(file_path)
+
     scan_doc = {
         "product_id": None,
-        "image_url": file_path,
+        "image_url": image_url or file_path,
         "source": "upload",
         "ecommerce_url": None,
         "ocr_raw_text": ocr_result["full_text"],
@@ -210,6 +214,8 @@ def upload_scan(
             "major": validation_result["summary"]["major"],
             "minor": validation_result["summary"]["minor"],
             "needs_review": validation_result["summary"]["needs_review"],
+            "total_checks": validation_result["summary"]["total_checks"],
+            "passed": validation_result["summary"]["passed"],
         },
         "location": {"lat": lat, "lng": lng} if lat is not None and lng is not None else None,
         "address": get_short_address(lat, lng) if lat is not None and lng is not None else None,
@@ -262,6 +268,21 @@ def realtime_scan(req: RealtimeScanRequest):
 
         db = require_db()
 
+        # Upload base64 image to Cloudinary (falls back to local file if not configured)
+        image_url = None
+        try:
+            image_url = upload_base64(req.image)
+            if not image_url:
+                # Fallback: save to local filesystem
+                img_bytes = base64.b64decode(req.image)
+                filename = f"{datetime.utcnow().timestamp()}_realtime.jpg"
+                file_path = os.path.join(UPLOAD_DIR, filename)
+                with open(file_path, "wb") as f:
+                    f.write(img_bytes)
+                image_url = file_path
+        except Exception as e:
+            logger.warning(f"Could not upload realtime image: {e}")
+
         font_analysis_result = {}
         try:
             word_boxes = result.get("word_boxes", [])
@@ -273,12 +294,12 @@ def realtime_scan(req: RealtimeScanRequest):
 
         scan_doc = {
             "product_id": None,
-            "image_url": None,
+            "image_url": image_url,
             "source": "realtime",
             "ecommerce_url": None,
             "ocr_raw_text": result.get("ocr_text", ""),
             "extracted_fields": result.get("extracted_fields", {}),
-            "field_boxes": {},
+            "field_boxes": result.get("field_bboxes", {}),
             "font_analysis": font_analysis_result,
             "overall_status": all_validation["overall_status"],
             "violations": [],
@@ -288,6 +309,8 @@ def realtime_scan(req: RealtimeScanRequest):
                 "major": all_validation["summary"]["major"],
                 "minor": all_validation["summary"]["minor"],
                 "needs_review": all_validation["summary"]["needs_review"],
+                "total_checks": all_validation["summary"]["total_checks"],
+                "passed": all_validation["summary"]["passed"],
             },
             "location": result.get("location"),
             "address": get_short_address(

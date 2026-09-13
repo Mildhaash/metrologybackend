@@ -50,10 +50,10 @@
     "severity": "major",
     "validation": {
       "type": "regex",
-      "pattern": "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\\s.]+\\d{4}|\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{4}|\\d{1,2}[/\\-]\\d{4}"
+      "pattern": "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\\s.]+\\d{4}|\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{2,4}|\\d{1,2}[/\\-]\\d{2,4}"
     },
     "error_message": "Missing or invalid manufacture date",
-    "suggestion": "Declare month and year in format: 'Month YYYY' or 'MM/YYYY'"
+    "suggestion": "Declare month and year in format: 'Month YYYY', 'MM/YYYY', or 'DD/MM/YYYY'"
   },
   {
     "rule_id": "LM-PC-2011-R6-1e",
@@ -64,8 +64,8 @@
     "severity": "critical",
     "validation": {
       "type": "regex",
-      "pattern": "(?:(?:M\\.?\\s*R\\.?\\s*P\\.?|Maximum\\s+Retail\\s+Price|Max\\.?\\s*Retail\\s+Price)\\s*[:.\\s]*(?:R[s5]s?\\.?|Re\\.?|INR|₹|Rupees?)?\\s*[:.\\s]*\\d+(?:\\.\\d{1,2})?\\s*(?:/\\s*-)?\\s*(?:\\(?incl\\.?(?:usive)?\\s+of\\s+all\\s*taxes\\)?)?|(?:R[s5]s?\\.?|Re\\.?|INR|₹|Rupees?)\\s*[:.\\s]*\\d+(?:\\.\\d{1,2})?\\s*(?:/\\s*-)?\\s*(?:\\(?incl\\.?(?:usive)?\\s+of\\s+all\\s*taxes\\)?)?)",
-      "currency_pattern": "(?:R[s5]s?\\.?|Re\\.?|INR|₹|Rupees?)",
+      "pattern": "(?:M\\.?\\s*R\\.?\\s*P\\.?|Maximum\\s+Retail\\s+Price|Max\\.?\\s*Retail\\s+Price)\\s*[:.\\s]*(?:\\(?incl\\.?(?:usive)?\\s+of\\s+all\\s*taxes\\)?\\s*[:.\\s]*)?(?:R[s5]s?\\.?|Re\\.?|INR|\\u20b9|Rupees?)?\\s*[:.\\s]*\\d+(?:\\.\\d{1,2})?\\s*(?:/\\s*-)?|(?:M\\.?\\s*R\\.?\\s*P\\.?|Maximum\\s+Retail\\s+Price|Max\\.?\\s*Retail\\s+Price)\\s*[:.\\s]*\\d+(?:\\.\\d{1,2})?\\s*(?:/\\s*-)?\\s*(?:\\(?incl\\.?(?:usive)?\\s+of\\s+all\\s*taxes\\)?)|(?:R[s5]s?\\.?|Re\\.?|INR|\\u20b9|Rupees?)\\s*[:.\\s]*\\d+(?:\\.\\d{1,2})?\\s*(?:/\\s*-)?\\s*(?:\\(?incl\\.?(?:usive)?\\s+of\\s+all\\s*taxes\\)?)",
+      "currency_pattern": "(?:R[s5]s?\\.?|Re\\.?|INR|\\u20b9|Rupees?)",
       "currency_error": "MRP must include Rs./₹ symbol (Rs, Rs., Re., INR, ₹ or Rupees)"
     },
     "error_message": "MRP format non-compliant with Legal Metrology Rules",
@@ -208,9 +208,9 @@
     "severity": "major",
     "validation": {
       "type": "regex",
-      "pattern": "(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{4}|(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*\\d{1,2}[/\\-]\\d{4}|(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\\s.]+\\d{4}|\\d{1,2}\\s*(?:months?|days?)\\s*(?:from|after)\\s*(?:date\\s*of\\s*)?(?:manufacture|packing)"
+      "pattern": "(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{2,4}|(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*\\d{1,2}[/\\-]\\d{2,4}|(?:best\\s*before|use\\s*by|exp(?:iry)?|expires?)\\s*[:.\\s]*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\\s.]+\\d{4}|\\d{1,2}\\s*(?:months?|days?)\\s*(?:from|after)\\s*(?:date\\s*of\\s*)?(?:manufacture|packing)"
     },
     "error_message": "Missing or invalid best before/use by date declaration",
-    "suggestion": "Declare best before or use by date in a clear format"
+    "suggestion": "Declare best before or use by date in a clear format (e.g., DD/MM/YYYY or DD/MM/YY)"
   }
 ]

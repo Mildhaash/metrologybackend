@@ -16,6 +16,7 @@ from services.field_extractor import FieldExtractor
 from services.rule_engine import RuleEngine
 from services.font_analyzer import font_analyzer, get_image_dimensions
 from services.box_mapper import map_field_boxes
+from services.cloudinary_service import upload_image
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +81,12 @@ def batch_scan(
             extracted_fields, validation_result, font_analysis, field_boxes, ocr_result = \
                 _process_single(file_path)
 
+            # Upload to Cloudinary (falls back to local path if not configured)
+            cloudinary_url = upload_image(file_path)
+
             scan_doc = {
                 "product_id": None,
-                "image_url": file_path,
+                "image_url": cloudinary_url or file_path,
                 "source": "batch",
                 "ecommerce_url": None,
                 "ocr_raw_text": ocr_result["full_text"],

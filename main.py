@@ -1,8 +1,10 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from routes.auth import router as auth_router
 from routes.scan import router as scan_router
@@ -34,6 +36,11 @@ app.include_router(ecommerce_router)
 app.include_router(pdf_report_router)
 app.include_router(docx_report_router)
 app.include_router(batch_scan_router)
+
+# Mount static files for uploaded images
+uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 @app.get("/")
 def root():
