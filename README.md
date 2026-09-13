@@ -21,8 +21,9 @@ A FastAPI REST API for scanning product labels, extracting compliance fields via
 | Uvicorn 0.24 | ASGI server |
 | MongoDB (PyMongo 4.6) | Database |
 | Google Gemini AI | OCR + field extraction |
-| RapidOCR (ONNX) | Fallback OCR engine |
+| RapidOCR (ONNX) | Fallback OCR engine (used when Gemini unavailable) |
 | OpenCV | Image preprocessing |
+| Regex Field Extractor | Extracts MRP, dates, batch, manufacturer, etc. from OCR text |
 | ReportLab | PDF generation |
 | python-docx | DOCX generation |
 
